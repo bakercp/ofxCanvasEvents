@@ -25,228 +25,84 @@
 #include "ofxCanvasEvents.h"
 
 namespace ofx {
-std::string CanvasEvents::EVENT_METHOD_PREFIX = "HTMLCanvasEvent-";
-    
-CanvasEvents::CanvasEvents(HTTP::BasicJSONRPCServerSettings settings):
-_bMouseOver(false),
-_bInterpolateMousePos(true),
-_canvasWidth(0),
-_canvasHeight(0)
+
+
+CanvasEvents::CanvasEvents()
 {
-    
-    _server = HTTP::BasicJSONRPCServer::makeShared(settings);
-    
-    std::string description = "Notifies ofApp of a canvas event.";
-    
-    _server->registerMethod(EVENT_METHOD_PREFIX + "mouseOver",
-                            description,
-                            this,
-                            &CanvasEvents::_notifyCanvasEventRecieved);
-    
-    _server->registerMethod(EVENT_METHOD_PREFIX + "mouseOut",
-                            description,
-                            this,
-                            &CanvasEvents::_notifyCanvasEventRecieved);
-    
-    _server->registerMethod(EVENT_METHOD_PREFIX + "keyPressed",
-                           description,
-                           this,
-                           &CanvasEvents::_notifyCanvasEventRecieved);
-    
-    _server->registerMethod(EVENT_METHOD_PREFIX + "keyReleased",
-                           description,
-                           this,
-                           &CanvasEvents::_notifyCanvasEventRecieved);
-    
-    _server->registerMethod(EVENT_METHOD_PREFIX + "mousePressed",
-                           description,
-                           this,
-                           &CanvasEvents::_notifyCanvasEventRecieved);
-    
-    _server->registerMethod(EVENT_METHOD_PREFIX + "mouseReleased",
-                           description,
-                           this,
-                           &CanvasEvents::_notifyCanvasEventRecieved);
-    
-    _server->registerMethod(EVENT_METHOD_PREFIX + "mouseMoved",
-                           description,
-                           this,
-                           &CanvasEvents::_notifyCanvasEventRecieved);
-    
-    _server->registerMethod(EVENT_METHOD_PREFIX + "mouseDragged",
-                           description,
-                           this,
-                           &CanvasEvents::_notifyCanvasEventRecieved);
-    
-    _server->registerMethod(EVENT_METHOD_PREFIX + "canvasSize",
-                            "Notifies the ofApp of the initial canvas size.",
-                            this,
-                            &CanvasEvents::_canvasSize);
-    
-    // Start the server.
-    _server->start();
-    
 }
+
 
 CanvasEvents::~CanvasEvents()
 {
-        
 }
-    
-void CanvasEvents::setInterpolateMousePos(bool b)
+
+
+void CanvasEvents::registerMethods(HTTP::BasicJSONRPCServer::SharedPtr server)
 {
-    _bInterpolateMousePos = b;
+    server->registerMethod("onPointerEvent",
+                           "Process HTML5 canvas pointer events.",
+                           this,
+                           &CanvasEvents::onPointerEvent);
+
+    server->registerMethod("onKeyboardEvent",
+                           "Process HTML5 canvas keyboard events.",
+                           this,
+                           &CanvasEvents::onKeyboardEvent);
+
+    server->getWebSocketRoute()->registerWebSocketEvents(this);
+
 }
-    
-bool CanvasEvents::isMouseOver() const
+
+
+void CanvasEvents::unregisterMethods(HTTP::BasicJSONRPCServer::SharedPtr server)
 {
-    return _bMouseOver;
+    server->getWebSocketRoute()->unregisterWebSocketEvents(this);
+    server->unregisterMethod("onKeyboardEvent");
+    server->unregisterMethod("onPointerEvent");
 }
-    
-bool CanvasEvents::getInterpolateMousePos() const
+
+
+bool CanvasEvents::onWebSocketOpenEvent(HTTP::WebSocketOpenEventArgs& evt)
 {
-    return _bInterpolateMousePos;
+    return false;  // We did not attend to this event, so pass it along.
 }
-    
-HTTP::BasicJSONRPCServer::SharedPtr CanvasEvents::getServer()
+
+
+bool CanvasEvents::onWebSocketCloseEvent(HTTP::WebSocketCloseEventArgs& evt)
 {
-    return _server;
+    return false;  // We did not attend to this event, so pass it along.
 }
-    
-void CanvasEvents::_canvasSize(ofx::JSONRPC::MethodArgs& args)
+
+
+bool CanvasEvents::onWebSocketFrameReceivedEvent(HTTP::WebSocketFrameEventArgs& evt)
 {
-        
-    _canvasWidth = args.params["width"].asInt();
-    _canvasHeight = args.params["height"].asInt();
-    string aspect = args.params["aspect"].asString();
-
-    float appAspect = (float) ofGetWidth()/ (float) ofGetHeight();
-    std::stringstream s;
-    s.precision(3);
-    s << appAspect;
-    
-    if (_canvasWidth != ofGetWidth() && _canvasHeight != ofGetHeight()) {
-        ofLogNotice() << "ofxCanvas: The size of the HTML canvas does not match"
-        << " the size of the app window."
-        << " Mouse and touch positions will be interpolated.";
-    }
-
-    if (aspect != s.str()) {
-        ofLogNotice() << "ofxCanvas: The aspect ratio of the HTML canvas does not"
-        << " match the aspect ratio of the app window."
-        << " Mouse and touch positions will be interpolated.";
-    }
+    return false;
 }
-    
-void CanvasEvents::_interpolateMouse(int& x, int& y, const int& width, const int& height) {
- 
-    if (width != ofGetWidth()) {
-        x = ofMap(x, 0, width, 0, ofGetWidth());
-    }
-    
-    if (height != ofGetHeight()) {
-        y = ofMap(y, 0, height, 0, ofGetHeight());
-    }
-}
-    
-void CanvasEvents::_notifyCanvasEventRecieved(ofx::JSONRPC::MethodArgs& args)
+
+
+bool CanvasEvents::onWebSocketFrameSentEvent(HTTP::WebSocketFrameEventArgs& evt)
 {
-    if (!args.params["type"].empty()) {
-        
-        std::string type = args.params["type"].asString();
-
-        if (type == "mouseOver") {
-            _bMouseOver = true;
-        }
-        else if (type == "mouseOut")
-        {
-            _bMouseOver = false;
-        }
-        else if (type == "keyPressed")
-        {
-
-            int keycode = args.params["keycode"].asInt();
-            
-            ofLogVerbose() << "ofxCanvasEvents: keyPressed event recieved";
-            ofNotifyKeyPressed(-1, keycode, -1, -1);
-        }
-        else if (type == "keyReleased")
-        {
-            
-            int keycode = args.params["keycode"].asInt();
-            
-            ofLogVerbose() << "ofxCanvasEvents: keyReleased event recieved";
-            ofNotifyKeyReleased(-1, keycode, -1, -1);
-        }
-        else if (type == "mousePressed")
-        {
-
-            int button = args.params["button"].asInt();
-            int x = args.params["x"].asInt();
-            int y = args.params["y"].asInt();
-            int width = args.params["w"].asInt();
-            int height = args.params["h"].asInt();
-            
-            if (getInterpolateMousePos())
-            {
-                _interpolateMouse(x, y, width, height);
-            }
-            
-            ofLogVerbose() << "ofxCanvasEvents: mousePressed event recieved";
-            ofNotifyMousePressed(x, y, button);
-        }
-        else if (type == "mouseReleased")
-        {
-            
-            int button = args.params["button"].asInt();
-            int x = args.params["x"].asInt();
-            int y = args.params["y"].asInt();
-            int width = args.params["w"].asInt();
-            int height = args.params["h"].asInt();
-            
-            if (getInterpolateMousePos())
-            {
-                _interpolateMouse(x, y, width, height);
-            }
-            
-            ofLogVerbose() << "ofxCanvasEvents: mouseReleased event recieved";
-            ofNotifyMouseReleased(x, y, button);
-        }
-        else if (type == "mouseMoved")
-        {
-
-            int x = args.params["x"].asInt();
-            int y = args.params["y"].asInt();
-            int width = args.params["w"].asInt();
-            int height = args.params["h"].asInt();
-            
-            if (getInterpolateMousePos())
-            {
-                _interpolateMouse(x, y, width, height);
-            }
-            
-            ofLogVerbose() << "ofxCanvasEvents: mouseMoved event recieved";
-            ofNotifyMouseMoved(x, y);
-        }
-        else if (type == "mouseDragged")
-        {
-            
-            int button = args.params["button"].asInt();
-            int x = args.params["x"].asInt();
-            int y = args.params["y"].asInt();
-            int width = args.params["w"].asInt();
-            int height = args.params["h"].asInt();
-            
-            if (getInterpolateMousePos())
-            {
-                _interpolateMouse(x, y, width, height);
-            }
-            
-            ofLogVerbose() << "ofxCanvasEvents: mouseDragged event recieved";
-            ofNotifyMouseDragged(x, y, button);
-        }
-    }
+    return false;  // We did not attend to this event, so pass it along.
 }
-    
-};
 
+
+bool CanvasEvents::onWebSocketErrorEvent(HTTP::WebSocketErrorEventArgs& evt)
+{
+    return false;  // We did not attend to this event, so pass it along.
+}
+
+
+void CanvasEvents::onPointerEvent(JSONRPC::MethodArgs& args)
+{
+    PointerEvent event = PointerEvent::fromJSON(args.params);
+    std::cout << args.params.toStyledString() << endl;
+    cout << event.toString() << endl;
+}
+
+void CanvasEvents::onKeyboardEvent(JSONRPC::MethodArgs& args)
+{
+    cout << args.toString() << endl;
+}
+
+
+};  // namespace ofx

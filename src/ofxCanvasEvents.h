@@ -24,45 +24,34 @@
 
 #pragma once
 
-#include "ofMain.h"
-#include "ofxJSONRPC.h"
-#include "ofxHTTP.h"
 
-namespace ofx
-{
+#include "ofxJSONRPC.h"
+#include "ofxPointer.h"
+
+
+namespace ofx {
+
 
 class CanvasEvents
 {
 public:
-    
-    static std::string EVENT_METHOD_PREFIX;
-    
-    CanvasEvents(HTTP::BasicJSONRPCServerSettings settings = HTTP::BasicJSONRPCServerSettings());
+    CanvasEvents();
     virtual ~CanvasEvents();
-    
-    void setInterpolateMousePos(bool b);
-    
-    bool getInterpolateMousePos() const;
-    bool isMouseOver() const;
-    
-    HTTP::BasicJSONRPCServer::SharedPtr getServer();
-    
+
+    void registerMethods(HTTP::BasicJSONRPCServer::SharedPtr server);
+    void unregisterMethods(HTTP::BasicJSONRPCServer::SharedPtr server);
+
+    bool onWebSocketOpenEvent(HTTP::WebSocketOpenEventArgs& evt);
+    bool onWebSocketCloseEvent(HTTP::WebSocketCloseEventArgs& evt);
+    bool onWebSocketFrameReceivedEvent(HTTP::WebSocketFrameEventArgs& evt);
+    bool onWebSocketFrameSentEvent(HTTP::WebSocketFrameEventArgs& evt);
+    bool onWebSocketErrorEvent(HTTP::WebSocketErrorEventArgs& evt);
+
 protected:
-
-    void _notifyCanvasEventRecieved(ofx::JSONRPC::MethodArgs& args);
-    void _canvasSize(ofx::JSONRPC::MethodArgs& args);
-    void _interpolateMouse(int& x, int& y, const int& width, const int& height);
-
-    bool _bMouseOver;
-    bool _bInterpolateMousePos;
-    
-    int _canvasWidth;
-    int _canvasHeight;
-    
-    HTTP::BasicJSONRPCServer::SharedPtr _server;
-
-private:
+    void onPointerEvent(JSONRPC::MethodArgs& args);
+    void onKeyboardEvent(JSONRPC::MethodArgs& args);
 
 };
-    
+
+
 } // namespace ofx
