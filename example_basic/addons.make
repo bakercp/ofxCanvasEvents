@@ -1,6 +1,6 @@
 ofxJSON
 ofxJSONRPC
+ofxHTTP
 ofxMediaType
 ofxSSLManager
 ofxTaskQueue
-addons
