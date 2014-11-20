@@ -1,77 +1,56 @@
+// =============================================================================
+//
+// Copyright (c) 2014 Christopher Baker <http://christopherbaker.net>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+// =============================================================================
+
+
 #include "ofApp.h"
 
-//--------------------------------------------------------------
-void ofApp::setup(){
-    
-//    ofSetWindowShape(380, 240);
-    
-//    ofSetLogLevel(OF_LOG_VERBOSE);
+
+void ofApp::setup()
+{
+    ofSetFrameRate(30);
+
+    ofSetLogLevel(OF_LOG_VERBOSE);
+
+    ofx::HTTP::BasicJSONRPCServerSettings settings;
+    settings.setPort(8197);
+
+    // Initialize the server.
+    server = ofx::HTTP::BasicJSONRPCServer::makeShared(settings);
+
+    // Register canvas event listeners.
+    canvasEvents.registerMethods(server);
+
+    // Start the server.
+    server->start();
+
+    // Launch a browser with the address of the server.
+    ofLaunchBrowser(server->getURL());
+}
+
+
+void ofApp::draw()
+{
     ofBackground(255);
-    
-    lastKeyPressed = 0;
-    message = "";
-    
-    ofLaunchBrowser(canvasEvents.getServer()->getURL());
 }
 
-//--------------------------------------------------------------
-void ofApp::update(){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::draw(){
-    
-    std::string isMouseOverCanvas = canvasEvents.isMouseOver() ? "TRUE" : "FALSE";
-//    std::string message = "Mouse: " + ofToString((int) mouse.x) + ", " + ofToString((int) mouse.x);
-    ofDrawBitmapStringHighlight(message, 15, 30);
-    ofDrawBitmapStringHighlight("mouse over canvas: " + isMouseOverCanvas, 15, 50);
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::keyPressed(ofKeyEventArgs& args){
-    
-    message = "keyPressed keycode: " + ofToString(args.keycode);
-}
-
-//--------------------------------------------------------------
-void ofApp::keyReleased(ofKeyEventArgs& args){
-    
-    message = "keyReleased keycode: " + ofToString(args.keycode);
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseMoved(int x, int y ){
-    message = "mouseMoved: " + ofToString(x) + ", " + ofToString(y);
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button){
-    message = "mouseDragged: " + ofToString(x) + ", " + ofToString(y);
-}
-
-//--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button){
-    message = "mousePressed: " + ofToString(x) + ", " + ofToString(y);
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button){
-    message = "mouseReleased: " + ofToString(x) + ", " + ofToString(y);
-}
-
-//--------------------------------------------------------------
-void ofApp::windowResized(int w, int h){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::gotMessage(ofMessage msg){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::dragEvent(ofDragInfo dragInfo){ 
-
-}

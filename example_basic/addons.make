@@ -1,8 +1,6 @@
-ofxIO
 ofxJSON
 ofxJSONRPC
 ofxMediaType
 ofxSSLManager
 ofxTaskQueue
-ofxCanvasEvents
-ofxHTTP
+addons

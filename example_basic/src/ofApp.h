@@ -1,27 +1,71 @@
+// =============================================================================
+//
+// Copyright (c) 2014 Christopher Baker <http://christopherbaker.net>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+// =============================================================================
+
+
 #pragma once
 
+
 #include "ofMain.h"
+#include "ofxJSONRPC.h"
 #include "ofxCanvasEvents.h"
 
-class ofApp : public ofBaseApp{
 
-	public:
-		void setup();
-		void update();
-		void draw();
+class ofApp: public ofBaseApp
+{
+public:
+    void setup();
+    void draw();
 
-		void keyPressed(ofKeyEventArgs& args);
-		void keyReleased(ofKeyEventArgs& args);
-		void mouseMoved(int x, int y );
-		void mouseDragged(int x, int y, int button);
-		void mousePressed(int x, int y, int button);
-		void mouseReleased(int x, int y, int button);
-		void windowResized(int w, int h);
-		void dragEvent(ofDragInfo dragInfo);
-		void gotMessage(ofMessage msg);
+    virtual void keyPressed( ofKeyEventArgs & key ){
+        cout << "========================: " << endl;
+        cout << "pressed: " << endl;
+        cout << "\tcodepoint: " << key.codepoint << endl;
+        cout << "\t scancode: " << key.scancode << endl;
+        cout << "\t      key: " << key.key << endl;
+        cout << "\t  keycode: " << key.keycode << endl;
 
-        int lastKeyPressed;
-        std::string message;
-        ofVec2f mouse;
-        ofx::CanvasEvents canvasEvents;
+        cout << "is SHIFT: " << (key.codepoint == OF_KEY_SHIFT) << endl;
+    }
+    virtual void keyReleased( ofKeyEventArgs & key ){
+        cout << "========================: " << endl;
+        cout << "releasesd: " << endl;
+        cout << "\tcodepoint: " << key.codepoint << endl;
+        cout << "\t scancode: " << key.scancode << endl;
+        cout << "\t      key: " << key.key << endl;
+        cout << "\t  keycode: " << key.keycode << endl;
+
+
+    }
+
+    /// \brief The server that handles the JSONRPC requests.
+    ofx::HTTP::BasicJSONRPCServer::SharedPtr server;
+
+    ofx::CanvasEvents canvasEvents;
+private:
+    // We use a mutex to protect any variables that can be
+    // modified by multiple clients.  In our case, userText must be protected.
+    // We mark the mutex as mutable so that it can be used in const functions.
+    mutable ofMutex mutex;
+
 };
